@@ -2,60 +2,65 @@
 
 import sys
 
+program_file = "ls8/examples/mult.ls8"
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        # This will hold our 256 bytes of memory
         self.ram = [0] * 256
-        
-        # This will hold out 8 general purpose registers
         self.reg = [0] * 8
-        self.pc = 0
+        self.pc = 0 
+        self.running = True
 
-    def ram_read(self, MAR):
-        # MAR = Memory Address Register
-            # This will accept the address to read and return the value stored
-        return self.ram[MAR]
+    def load(self, file):
+        """
+        Load an .ls8 file given the filename passed in as an argument
+        """
+        # print(f"SYS.ARGV: {sys.argv}")
 
-    def ram_write(self, MAR, MDR):
-        # MDR = Memory Data Register
-            # This will accept the value to write, and the address to write it to
-        self.ram[MAR] = MDR
-
-
-    def load(self):
-        """Load a program into memory."""
+        # if len(sys.argv) != 2:
+        #     print("usage: 02_fileio2.py filename")
 
         address = 0
 
-        # For now, we've just hardcoded a program:
+        try:
+            with open(file) as f:
+                for line in f:
+                    comment_split = line.split("#")
+                    n = comment_split[0].strip()
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+                    if n == "":
+                        continue
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                    x = int(n, 2)
+                    print(f"{x:08b}: {x:d}")
+                    self.ram[address] = x
+                    address += 1
+
+        except:
+            print(f"{sys.argv[0]} / {sys.argv[1]} not found")
 
 
     def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
+        """Basic Arithmetic and Logic operations."""
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
+    def ram_read(self, MAR):
+        return self.ram[MAR]
+
+    def ram_write(self, MAR, MDR):
+        self.ram[MAR] = MDR
+        
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -76,38 +81,66 @@ class CPU:
 
         print()
 
-    def ldi(self, operand_a, operand_b):
-        self.reg[operand_a] = operand_b
-
-    def prn(self, operand_a):
-        print(operand_a)
-
     def run(self):
         """Run the CPU."""
+        HLT = 0b00000001
         LDI = 0b10000010
         PRN = 0b01000111
-        HLT = 0b00000001
+        MUL = 0b10100010
+        ADD  = 0b10100000
+        PUSH = 0b01000101
+        POP = 0b01000110
 
-        running = True
-        
-        while running:
-            # Instruction register
-            IR = self.ram_read(self.pc)
+        while self.running:
+            IR = self.ram[self.pc]
+            #print(f"Bad input: {IR}")
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
+            print(operand_a)
+            print(operand_b)
 
+            # check which instruction we're on, and run that instruction
             if IR == HLT:
-                running = False
+                self.running = False
                 self.pc += 1
-            
             elif IR == LDI:
-                self.ldi(operand_a, operand_b)
-                self.pc += 3
-
+                self.reg[operand_a] = operand_b
+                print(operand_a)
+                self.pc += 3   
             elif IR == PRN:
-                self.prn(operand_a)
+                print(operand_a)
                 self.pc += 2
             
+            elif IR == MUL:
+                res = self.reg[operand_a] * self.reg[operand_b]
+                print(res)
+                self.pc += 3
+            elif IR == ADD:
+                res = self.reg[operand_a] + self.reg[operand_b]
+                print(res)
+
+            elif IR == PUSH:
+                #decrement Stack
+                self.reg[7] -= 1
+
+                # Get value from register
+                reg_num = self.ram[self.pc + 1]
+                value = self.reg[reg_num]
+
+                # Store it on the stack
+                top_of_stack_addr = self.reg[7]
+                self.ram[top_of_stack_addr] = value
+
+                self.pc += 2
+
+            elif IR == POP:
+                #increment stack
+                value = self.ram_read(self.reg[7])
+                self.reg[operation_a] = value
+                
+                self.reg[7] +=1
+                self.pc +=2
             else:
-                print(f"Bad input: {bin(IR)}")
-                running = False
+                pass
+            
+        

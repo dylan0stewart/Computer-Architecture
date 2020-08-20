@@ -4,8 +4,9 @@
 
 import sys
 from cpu import *
+from examples import *
 
 cpu = CPU()
 
-cpu.load()
+cpu.load(program_file)
 cpu.run()
