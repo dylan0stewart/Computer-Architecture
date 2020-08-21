@@ -1,7 +1,26 @@
-"""CPU functionality."""
+"""
+I was struggling through to make each day work all week, and finally had it start to click yesterday. 
+Was having so many issues trying to use my original CA repo to build on top of, that I decided to 
+refactor entirely since there aren't any other pieces to the Sprint, so there is ample time.
+
+One of my TLs showed me how they had structured theirs, and it just made soooo much more sense, so i'm trying that way as well now.
+
+Will try and flesh it back out to all of the week's functions, but as it stands my old repo works for all the week's
+assignments, but not for the SC, and this new version only works for SC(currently).
+^ update: most working, havent tested all
+"""
+
+
+import sys
+
 LDI = 0b10000010
 HLT = 0b00000001
 PRN = 0b01000111
+CMP = 0b10100111
+E = 0b00000111
+JMP = 0b01010100
+JE = 0b01010101
+JNE = 0b01010110
 MUL = 0b10100010
 POP = 0b01000110
 RET = 0b00010001
@@ -9,23 +28,7 @@ CALL = 0b01010000
 PUSH = 0b01000101
 SP = 0b00000111
 ADD = 0b10100000
-CMP = 0b10100111
-E = 0b00000111
-JMP = 0b01010100
-JE = 0b01010101
-JNE = 0b01010110
 
-
-"""
-I was struggling through to make each day work all week, and finally had it start to click yesterday. 
-Was having so many issues trying to use my original CA repo to build on top of, that I decided to 
-refactor entirely since there aren't any other pieces to the Sprint, so there is ample time. Will try and 
-flesh it back out to all of the week's functions, but as it stands my old repo works for all the week's
-assignments, but not for the SC, and this new version only works for SC(currently).
-"""
-
-
-import sys
 
 class CPU: # this part stayed basically exactly the same until we hit the alu function
     """Main CPU class."""
@@ -226,7 +229,11 @@ class CPU: # this part stayed basically exactly the same until we hit the alu fu
 
     def run(self):
         '''
-        Stole the first few lines from the original.
+        Stole the first few lines from the original. map-out will be;
+        find the current instruction, do bitwise op to shift over, 
+        re-instantiate operands like in the original, then take the current IR 
+        and run it, by using the table above to match things up.
+        Lastly, if/when the flag is 0, get my move and make the proper change to counter.
         '''
         while self.running:
             IR = self.ram_read(self.pc) # set current instruction
