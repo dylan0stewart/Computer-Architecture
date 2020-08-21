@@ -8,5 +8,5 @@ from examples import *
 
 cpu = CPU()
 
-cpu.load(program_file)
+cpu.load()
 cpu.run()
